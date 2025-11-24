@@ -1,0 +1,150 @@
+video:
+  resolution:
+    width: 1920
+    height: 1080
+  fps: 30
+  duration: 30
+  codec: libx264
+  audio_codec: aac
+  audio_bitrate: 192k
+
+templates:
+  clean:
+    name: "Clean Modern"
+    background_color: "#E5E5E5"
+    accent_color: "#FF0000"
+    primary_font: "Arial-Bold"
+    secondary_font: "Arial"
+    logo_position: [100, 50]
+    bike_position: [200, 300]
+    price_position: [1400, 800]
+
+  dark:
+    name: "Dark Aggressive"
+    background_color: "#1a1a1a"
+    accent_color: "#FF0000"
+    primary_font: "Impact"
+    secondary_font: "Arial-Bold"
+    logo_position: [100, 50]
+    bike_position: [200, 300]
+    price_position: [1400, 800]
+
+  fire:
+    name: "Fire & Flames"
+    background_video: "assets/backgrounds/fire_background.mp4"
+    accent_color: "#FF0000"
+    primary_font: "Impact"
+    secondary_font: "Arial-Bold"
+    logo_position: [100, 50]
+    bike_position: [200, 300]
+    price_position: [1400, 800]
+
+timeline:
+  intro:
+    start: 0
+    end: 3
+    elements:
+      - type: "logo_animation"
+        animation: "slide_in"
+
+  hero:
+    start: 3
+    end: 8
+    elements:
+      - type: "bike_reveal"
+        animation: "zoom_rotate"
+      - type: "title_overlay"
+        animation: "fade_in"
+
+  features:
+    start: 8
+    end: 15
+    elements:
+      - type: "spec_callouts"
+        animation: "pop_in"
+      - type: "image_carousel"
+        animation: "slide"
+
+  price_reveal:
+    start: 15
+    end: 22
+    elements:
+      - type: "price_slash"
+        animation: "strike_through"
+      - type: "slasher_price"
+        animation: "scale_pulse"
+
+  cta:
+    start: 22
+    end: 27
+    elements:
+      - type: "qr_code"
+        animation: "fade_in"
+      - type: "cta_text"
+        text: "SCAN TO RESERVE NOW"
+
+  outro:
+    start: 27
+    end: 30
+    elements:
+      - type: "dealer_logo"
+        animation: "fade_in"
+
+branding:
+  logo_path: "assets/branding/slasher_sale_logo.png"
+  tagline: "24/7 Harley-Davidson Deals"
+  colors:
+    primary: "#FF0000"
+    secondary: "#000000"
+    accent: "#FFFFFF"
+
+audio:
+  background_music:
+    path: "assets/music/aggressive_rock.mp3"
+    volume: 0.3
+  voiceover:
+    volume: 1.0
+    fade_in: 0.5
+    fade_out: 0.5
+
+script_templates:
+  intro:
+    - "Own the road."
+    - "Power unleashed."
+    - "Born to ride."
+    - "Freedom awaits."
+
+  feature_callouts:
+    engine:
+      - "{engine} cubic inches of pure Harley power"
+      - "Legendary {engine} V-Twin engine"
+    mileage_low:
+      - "Only {mileage} miles"
+      - "Barely broken in at {mileage} miles"
+    mileage_high:
+      - "Road-tested and ready"
+      - "Proven performance"
+    custom:
+      - "Fully customized masterpiece"
+      - "One-of-a-kind build"
+
+  price_reveal:
+    - "Was {original_price}. Now just {slasher_price}."
+    - "Slashed from {original_price} to {slasher_price}."
+    - "{slasher_price}. That's {savings} in savings."
+
+  cta:
+    - "Scan the code. Reserve now."
+    - "Don't wait. This deal won't last."
+    - "Make it yours today."
+
+processing:
+  image:
+    max_size: [1920, 1080]
+    background_removal: true
+    upscale: true
+    enhance: true
+
+  parallel_processing:
+    max_workers: 5
+    batch_size: 10
