@@ -3,6 +3,7 @@ QR Code Generator for motorcycle listings
 """
 
 import qrcode
+from typing import Optional
 from PIL import Image
 from pathlib import Path
 import logging

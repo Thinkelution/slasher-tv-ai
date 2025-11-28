@@ -156,36 +156,26 @@ class ScriptGenerator:
         if description:
             desc_snippet = f"\n\nListing Description (use as inspiration, don't copy verbatim):\n{description[:500]}"
 
-        prompt = f"""Write a compelling 30-second TV commercial script for this Harley-Davidson motorcycle:
+        prompt = f"""Write a 30-second TV commercial voiceover script for this motorcycle:
 
-BIKE DETAILS:
-- {year} {make} {model}
-- ${price:,.0f}
-- {details_text}
-{desc_snippet}
+BIKE: {year} {make} {model}
+PRICE: ${price:,.0f}
+DETAILS: {details_text}
 
-SCRIPT REQUIREMENTS:
-1. Duration: Exactly 30 seconds when read aloud (roughly 75-90 words)
+STRICT REQUIREMENTS:
+1. EXACTLY 70-80 words total (this is critical for 30-second timing)
 2. Style: {style_guide}
 3. Structure:
-   - Hook (2-3 seconds): Grab attention immediately
-   - Features (8-10 seconds): Highlight 2-3 key selling points
-   - Price Reveal (5 seconds): Build excitement around the price
-   - Call-to-Action (3-5 seconds): Strong closing with urgency
+   - Opening hook: 1 punchy sentence (5-8 words)
+   - Features: 2-3 short sentences about the bike (25-30 words)
+   - Price: 1 sentence with price mention (10-12 words)
+   - CTA: End with "Scan to reserve now. San Diego Harley-Davidson." (8 words)
 
-4. Tone: {style.capitalize()}
-5. DO NOT use "um", "uh", filler words, or questions
-6. DO use vivid imagery and emotional triggers
-7. Focus on FEELING and LIFESTYLE, not just specs
-8. End with: "Scan to reserve. Available now at San Diego Harley-Davidson."
+4. NO questions, NO filler words
+5. Short punchy sentences only
+6. Focus on emotion and power
 
-EXAMPLE OPENING HOOKS:
-- "Born to dominate."
-- "The road is calling."
-- "Power unleashed."
-- "Freedom never looked this good."
-
-Write the script now. Just the script text, no other commentary:"""
+Write ONLY the script (70-80 words), nothing else:"""
 
         return prompt
 
