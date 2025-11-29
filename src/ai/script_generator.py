@@ -187,24 +187,29 @@ SCRIPT STRUCTURE (30 seconds total):
 
 VOICE STYLE: {style_guide}
 
-RULES:
-1. Write for a DEEP, BOLD, AUTHORITATIVE male voice
-2. Use SHORT, PUNCHY sentences that punch hard
-3. Include DRAMATIC PAUSES (marked with periods)
-4. NO questions - only powerful statements
-5. NO filler words (um, uh, well, so)
-6. Numbers spoken as words ("six thousand nine hundred ninety-nine dollars")
-7. Focus on EMOTION and LIFESTYLE over specs
-8. Create URGENCY without being cheesy
-9. End EXACTLY with: "Scan to reserve. San Diego Harley-Davidson."
+RULES FOR ENTHUSIASTIC SALESMAN VOICE:
+1. Write for a DEEP, BOLD, ENTHUSIASTIC male voice - like a passionate car salesman
+2. Use SHORT, PUNCHY sentences that PUNCH HARD
+3. Add DRAMATIC PAUSES using "..." for breath and impact (e.g., "This bike... is a BEAST.")
+4. Use ALL CAPS for words that need EMPHASIS (the voice will stress these)
+5. NO questions - only powerful STATEMENTS
+6. NO filler words (um, uh, well, so, just)
+7. Spell out ALL numbers naturally:
+   - Years: "twenty twenty-four" not "2024"
+   - Prices: "seventeen thousand, four ninety-nine" not "$17,499"
+   - Mileage: "only eight hundred miles" not "800 miles"
+8. Focus on EMOTION, EXCITEMENT, and LIFESTYLE over technical specs
+9. Create URGENCY like a LIMITED TIME offer - make them feel they'll MISS OUT
+10. Add energy words: POWER, BEAST, UNLEASH, DOMINATE, CONQUER, LEGENDARY
+11. End EXACTLY with: "Scan to reserve... San Diego Harley-Davidson."
 
-EXAMPLE PROFESSIONAL SCRIPTS:
+EXAMPLE SCRIPTS WITH PROPER FORMATTING:
 
-Example 1 (Aggressive - 78 words):
-"Dominance. Redefined. The {year} {make}. Raw American muscle wrapped in chrome and attitude. A thundering engine that announces your arrival before you're even seen. Custom styling that turns every street into your personal runway. Now. Just ${price:,.0f}. This isn't just a motorcycle. It's a statement. And statements like this don't last. Scan to reserve. San Diego Harley-Davidson."
+Example 1 (Aggressive - 75 words):
+"POWER... UNLEASHED. The twenty twenty-four Harley-Davidson Low Rider S. This is RAW American muscle... wrapped in chrome and ATTITUDE. A thundering engine that announces your arrival... before you're even SEEN. All this BEAST... for just seventeen thousand, four ninety-nine. This isn't just a motorcycle... it's a STATEMENT. And deals like this... DON'T last. Scan to reserve... San Diego Harley-Davidson."
 
-Example 2 (Smooth - 76 words):
-"Some machines are built to ride. This one. Is built to be remembered. The {year} {make}. Precision engineering meets timeless American craftsmanship. Every curve. Every detail. Designed for those who refuse to blend in. Priced at ${price:,.0f}. Excellence. Within reach. Your next chapter starts now. Scan to reserve. San Diego Harley-Davidson."
+Example 2 (Smooth - 74 words):
+"Some machines are built to ride... This one... is built to be REMEMBERED. The twenty twenty-four Harley-Davidson. Precision engineering meets timeless American CRAFTSMANSHIP. Every curve... every detail... designed for those who REFUSE to blend in. Yours... for just nineteen thousand, nine ninety-nine. EXCELLENCE... within reach. Your next chapter... starts NOW. Scan to reserve... San Diego Harley-Davidson."
 
 NOW WRITE THE SCRIPT (just the voiceover text, nothing else):"""
 
