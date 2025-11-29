@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { ToastType } from '../App'
 import ResultPanel from './ResultPanel'
 import './GenerateForm.css'
@@ -22,7 +22,21 @@ export interface FormData {
   listing_url: string
   description: string
   photo_urls: string
+  background_music: string
+  music_volume: number
 }
+
+// Music track from Jamendo API
+interface MusicTrack {
+  id: string
+  name: string
+  artist_name: string
+  duration: number
+  audio: string
+}
+
+// Jamendo API client ID (free tier)
+const JAMENDO_CLIENT_ID = '2c9a11b9'
 
 interface GenerationResult {
   videoUrl: string
@@ -43,7 +57,9 @@ const initialFormData: FormData = {
   voice_style: 'aggressive',
   listing_url: '',
   description: '',
-  photo_urls: ''
+  photo_urls: '',
+  background_music: 'none',
+  music_volume: 30
 }
 
 function GenerateForm({ showToast }: GenerateFormProps) {
@@ -51,6 +67,62 @@ function GenerateForm({ showToast }: GenerateFormProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [isRegenerating, setIsRegenerating] = useState(false)
   const [result, setResult] = useState<GenerationResult | null>(null)
+  const [musicTracks, setMusicTracks] = useState<MusicTrack[]>([])
+  const [isMusicLoading, setIsMusicLoading] = useState(true)
+  const [previewAudio, setPreviewAudio] = useState<HTMLAudioElement | null>(null)
+
+  // Fetch music tracks from Jamendo API
+  useEffect(() => {
+    const fetchMusic = async () => {
+      try {
+        const response = await fetch(
+          `https://api.jamendo.com/v3.0/tracks/?client_id=${JAMENDO_CLIENT_ID}&format=json&limit=15&tags=energetic+rock&include=musicinfo&groupby=artist_id`
+        )
+        const data = await response.json()
+        
+        if (data.results) {
+          const tracks: MusicTrack[] = data.results.map((track: any) => ({
+            id: track.id,
+            name: track.name,
+            artist_name: track.artist_name,
+            duration: track.duration,
+            audio: track.audio
+          }))
+          setMusicTracks(tracks)
+        }
+      } catch (error) {
+        console.error('Failed to fetch music:', error)
+        showToast('Failed to load music tracks', 'error')
+      } finally {
+        setIsMusicLoading(false)
+      }
+    }
+
+    fetchMusic()
+  }, [])
+
+  // Handle music preview
+  const handleMusicPreview = (audioUrl: string) => {
+    if (previewAudio) {
+      previewAudio.pause()
+    }
+    
+    if (audioUrl && audioUrl !== 'none') {
+      const audio = new Audio(audioUrl)
+      audio.volume = 0.3
+      audio.play()
+      setPreviewAudio(audio)
+    }
+  }
+
+  // Stop preview on unmount
+  useEffect(() => {
+    return () => {
+      if (previewAudio) {
+        previewAudio.pause()
+      }
+    }
+  }, [previewAudio])
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
@@ -62,7 +134,8 @@ function GenerateForm({ showToast }: GenerateFormProps) {
       ...formData,
       year: parseInt(formData.year),
       price: parseFloat(formData.price),
-      odometer: formData.odometer ? parseInt(formData.odometer) : null
+      odometer: formData.odometer ? parseInt(formData.odometer) : null,
+      music_volume: formData.music_volume
     }
 
     const response = await fetch('/api/generate', {
@@ -199,6 +272,55 @@ function GenerateForm({ showToast }: GenerateFormProps) {
               <option value="smooth">Smooth (Sophisticated)</option>
               <option value="professional">Professional (Clear)</option>
             </select>
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="background_music">Background Music {isMusicLoading && '(Loading...)'}</label>
+            <div className="music-select-container">
+              <select 
+                id="background_music" 
+                name="background_music" 
+                value={formData.background_music} 
+                onChange={handleChange}
+                disabled={isMusicLoading}
+              >
+                <option value="none">No Music - Voiceover only</option>
+                {musicTracks.map(track => (
+                  <option key={track.id} value={track.audio}>
+                    {track.name} - {track.artist_name} ({Math.floor(track.duration / 60)}:{(track.duration % 60).toString().padStart(2, '0')})
+                  </option>
+                ))}
+              </select>
+              <button
+                type="button"
+                className="btn-preview"
+                onClick={() => handleMusicPreview(formData.background_music)}
+                disabled={formData.background_music === 'none' || !formData.background_music}
+                title="Preview music"
+              >
+                ▶
+              </button>
+            </div>
+            <span className="music-hint">Royalty-free music from Jamendo</span>
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="music_volume">Music Volume: {formData.music_volume}%</label>
+            <div className="volume-slider-container">
+              <span className="volume-icon">🔈</span>
+              <input
+                type="range"
+                id="music_volume"
+                name="music_volume"
+                min="0"
+                max="100"
+                value={formData.music_volume}
+                onChange={handleChange}
+                className="volume-slider"
+              />
+              <span className="volume-icon">🔊</span>
+            </div>
+            <span className="volume-hint">Lower = voiceover dominant, Higher = music dominant</span>
           </div>
 
           <div className="form-group">
