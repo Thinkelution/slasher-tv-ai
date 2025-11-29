@@ -1,4 +1,7 @@
 import { useState } from 'react'
+import GenerateForm from './components/GenerateForm'
+import ListingsTable from './components/ListingsTable'
+import Toast from './components/Toast'
 import './App.css'
 
 export type ToastType = 'success' | 'error' | 'info'
@@ -11,7 +14,7 @@ export interface ToastState {
 
 function App() {
   const [activeTab, setActiveTab] = useState<'generate' | 'listings'>('generate')
-  const [_toast, setToast] = useState<ToastState>({ show: false, message: '', type: 'success' })
+  const [toast, setToast] = useState<ToastState>({ show: false, message: '', type: 'success' })
 
   const showToast = (message: string, type: ToastType = 'success') => {
     setToast({ show: true, message, type })
@@ -39,17 +42,16 @@ function App() {
         </button>
         <button 
           className={`tab ${activeTab === 'listings' ? 'active' : ''}`}
-          onClick={() => { setActiveTab('listings'); showToast('Listings tab - coming soon', 'info') }}
+          onClick={() => setActiveTab('listings')}
         >
           Existing Listings
         </button>
       </div>
 
-      <div className="card">
-        <p style={{ color: 'var(--text-secondary)' }}>
-          {activeTab === 'generate' ? 'Generate form coming next...' : 'Listings table coming soon...'}
-        </p>
-      </div>
+      {activeTab === 'generate' && <GenerateForm showToast={showToast} />}
+      {activeTab === 'listings' && <ListingsTable showToast={showToast} />}
+
+      <Toast toast={toast} />
     </div>
   )
 }
