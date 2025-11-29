@@ -70,6 +70,7 @@ function GenerateForm({ showToast }: GenerateFormProps) {
   const [musicTracks, setMusicTracks] = useState<MusicTrack[]>([])
   const [isMusicLoading, setIsMusicLoading] = useState(true)
   const [previewAudio, setPreviewAudio] = useState<HTMLAudioElement | null>(null)
+  const [isPlaying, setIsPlaying] = useState(false)
 
   // Fetch music tracks from Jamendo API
   useEffect(() => {
@@ -101,8 +102,16 @@ function GenerateForm({ showToast }: GenerateFormProps) {
     fetchMusic()
   }, [])
 
-  // Handle music preview
+  // Handle music preview toggle (play/pause)
   const handleMusicPreview = (audioUrl: string) => {
+    // If currently playing the same track, pause it
+    if (previewAudio && isPlaying) {
+      previewAudio.pause()
+      setIsPlaying(false)
+      return
+    }
+    
+    // If different track or not playing, start new
     if (previewAudio) {
       previewAudio.pause()
     }
@@ -112,8 +121,22 @@ function GenerateForm({ showToast }: GenerateFormProps) {
       audio.volume = 0.3
       audio.play()
       setPreviewAudio(audio)
+      setIsPlaying(true)
+      
+      // When track ends, reset playing state
+      audio.onended = () => {
+        setIsPlaying(false)
+      }
     }
   }
+
+  // Stop preview when music selection changes
+  useEffect(() => {
+    if (previewAudio) {
+      previewAudio.pause()
+      setIsPlaying(false)
+    }
+  }, [formData.background_music])
 
   // Stop preview on unmount
   useEffect(() => {
@@ -293,12 +316,12 @@ function GenerateForm({ showToast }: GenerateFormProps) {
               </select>
               <button
                 type="button"
-                className="btn-preview"
+                className={`btn-preview ${isPlaying ? 'playing' : ''}`}
                 onClick={() => handleMusicPreview(formData.background_music)}
                 disabled={formData.background_music === 'none' || !formData.background_music}
-                title="Preview music"
+                title={isPlaying ? "Pause preview" : "Play preview"}
               >
-                ▶
+                {isPlaying ? '⏸' : '▶'}
               </button>
             </div>
             <span className="music-hint">Royalty-free music from Jamendo</span>

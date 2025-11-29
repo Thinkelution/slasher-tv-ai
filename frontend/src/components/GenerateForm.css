@@ -217,6 +217,17 @@ textarea {
   border-color: var(--accent);
 }
 
+.btn-preview.playing {
+  background: var(--accent);
+  border-color: var(--accent);
+  animation: pulse 1s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
 .btn-preview:disabled {
   opacity: 0.4;
   cursor: not-allowed;
