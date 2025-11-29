@@ -1,5 +1,6 @@
 """
 AI Script Generator for motorcycle promo videos
+Professional 30-second TV commercial scripts optimized for voiceover
 """
 
 import os
@@ -23,9 +24,16 @@ load_dotenv()
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+# Constants for 30-second voiceover timing
+# Average speaking rate: 150 words per minute = 2.5 words per second
+# 30 seconds = 75 words (comfortable pace for TV commercial)
+TARGET_WORD_COUNT = 75
+MIN_WORD_COUNT = 70
+MAX_WORD_COUNT = 85
+
 
 class ScriptGenerator:
-    """Generate AI-powered ad scripts for motorcycle videos"""
+    """Generate AI-powered ad scripts for motorcycle videos - optimized for 30-second voiceover"""
 
     def __init__(
         self,
@@ -46,7 +54,7 @@ class ScriptGenerator:
             if OpenAI is None:
                 raise ImportError("openai package not installed. Run: pip install openai")
             self.client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-            self.model = model or os.getenv("SCRIPT_MODEL", "gpt-4")
+            self.model = model or os.getenv("SCRIPT_MODEL", "gpt-4o")
         elif self.provider == "anthropic":
             if Anthropic is None:
                 raise ImportError("anthropic package not installed. Run: pip install anthropic")
@@ -126,7 +134,7 @@ class ScriptGenerator:
         is_custom: bool,
         style: str
     ) -> str:
-        """Build prompt for AI model"""
+        """Build prompt for AI model - optimized for professional 30-second voiceover"""
 
         # Prepare bike details
         details = []
@@ -142,50 +150,63 @@ class ScriptGenerator:
         if is_custom:
             details.append("Custom build")
 
-        details_text = " | ".join(details) if details else "No additional details"
+        details_text = " | ".join(details) if details else "Premium condition"
 
-        # Style guidance
+        # Style guidance for bold TV commercial voice
         style_guide = {
-            "aggressive": "High-energy, bold, commanding. Use short punchy sentences. Emphasize power and attitude.",
-            "smooth": "Smooth, sophisticated, elegant. Use flowing sentences. Emphasize style and craftsmanship.",
-            "professional": "Clear, informative, trustworthy. Use balanced sentences. Emphasize value and reliability."
-        }.get(style, "Balanced and engaging")
+            "aggressive": "BOLD, POWERFUL, COMMANDING. Short punchy sentences. Deep authoritative tone. Think monster truck rally announcer meets luxury car commercial.",
+            "smooth": "SOPHISTICATED, CONFIDENT, PREMIUM. Flowing elegant sentences. Think luxury automotive brand with prestige.",
+            "professional": "TRUSTWORTHY, AUTHORITATIVE, COMPELLING. Clear direct sentences. Think premium dealership commercial."
+        }.get(style, "Bold and commanding")
 
         # Include description snippet if available
         desc_snippet = ""
         if description:
-            desc_snippet = f"\n\nListing Description (use as inspiration, don't copy verbatim):\n{description[:500]}"
+            # Extract key selling points from description
+            desc_snippet = f"\n\nKey Details (use as inspiration):\n{description[:400]}"
 
-        prompt = f"""Write a compelling 30-second TV commercial script for this Harley-Davidson motorcycle:
+        prompt = f"""You are writing a professional 30-SECOND TV COMMERCIAL SCRIPT for a bold male voiceover artist.
 
-BIKE DETAILS:
-- {year} {make} {model}
-- ${price:,.0f}
-- {details_text}
+MOTORCYCLE:
+• {year} {make} {model}
+• Price: ${price:,.0f}
+• {details_text}
 {desc_snippet}
 
-SCRIPT REQUIREMENTS:
-1. Duration: Exactly 30 seconds when read aloud (roughly 75-90 words)
-2. Style: {style_guide}
-3. Structure:
-   - Hook (2-3 seconds): Grab attention immediately
-   - Features (8-10 seconds): Highlight 2-3 key selling points
-   - Price Reveal (5 seconds): Build excitement around the price
-   - Call-to-Action (3-5 seconds): Strong closing with urgency
+CRITICAL TIMING REQUIREMENTS:
+- EXACTLY {TARGET_WORD_COUNT} words (range: {MIN_WORD_COUNT}-{MAX_WORD_COUNT})
+- Speaking rate: 2.5 words/second for bold dramatic delivery
+- Total duration: 30 seconds when spoken
 
-4. Tone: {style.capitalize()}
-5. DO NOT use "um", "uh", filler words, or questions
-6. DO use vivid imagery and emotional triggers
-7. Focus on FEELING and LIFESTYLE, not just specs
-8. End with: "Scan to reserve. Available now at San Diego Harley-Davidson."
+SCRIPT STRUCTURE (30 seconds total):
+[0-3 sec] HOOK: One powerful opening line that grabs attention
+[3-12 sec] FEATURES: 2-3 compelling benefits/features with emotional impact  
+[12-20 sec] THE OFFER: Price reveal with urgency and value proposition
+[20-27 sec] CALL TO ACTION: Create urgency, drive action
+[27-30 sec] TAG: "Scan to reserve. San Diego Harley-Davidson."
 
-EXAMPLE OPENING HOOKS:
-- "Born to dominate."
-- "The road is calling."
-- "Power unleashed."
-- "Freedom never looked this good."
+VOICE STYLE: {style_guide}
 
-Write the script now. Just the script text, no other commentary:"""
+RULES:
+1. Write for a DEEP, BOLD, AUTHORITATIVE male voice
+2. Use SHORT, PUNCHY sentences that punch hard
+3. Include DRAMATIC PAUSES (marked with periods)
+4. NO questions - only powerful statements
+5. NO filler words (um, uh, well, so)
+6. Numbers spoken as words ("six thousand nine hundred ninety-nine dollars")
+7. Focus on EMOTION and LIFESTYLE over specs
+8. Create URGENCY without being cheesy
+9. End EXACTLY with: "Scan to reserve. San Diego Harley-Davidson."
+
+EXAMPLE PROFESSIONAL SCRIPTS:
+
+Example 1 (Aggressive - 78 words):
+"Dominance. Redefined. The {year} {make}. Raw American muscle wrapped in chrome and attitude. A thundering engine that announces your arrival before you're even seen. Custom styling that turns every street into your personal runway. Now. Just ${price:,.0f}. This isn't just a motorcycle. It's a statement. And statements like this don't last. Scan to reserve. San Diego Harley-Davidson."
+
+Example 2 (Smooth - 76 words):
+"Some machines are built to ride. This one. Is built to be remembered. The {year} {make}. Precision engineering meets timeless American craftsmanship. Every curve. Every detail. Designed for those who refuse to blend in. Priced at ${price:,.0f}. Excellence. Within reach. Your next chapter starts now. Scan to reserve. San Diego Harley-Davidson."
+
+NOW WRITE THE SCRIPT (just the voiceover text, nothing else):"""
 
         return prompt
 
@@ -239,15 +260,30 @@ Write the script now. Just the script text, no other commentary:"""
             return self._fallback_script(prompt)
 
     def _fallback_script(self, prompt: str) -> str:
-        """Generate fallback script if AI fails"""
+        """Generate fallback script if AI fails - professional 30-second template"""
         logger.warning("Using fallback script template")
-        return """The road is calling. This is your answer.
+        return """Power. Unleashed.
 
-A stunning Harley-Davidson ready to dominate every mile. Powerful engine. Legendary craftsmanship. Unmistakable style.
+This is the machine that changes everything. Raw American engineering. Thundering performance. Unmistakable presence on every road you conquer.
 
-And right now, it's yours for an unbeatable price.
+A legend. Built for those who lead. Not follow.
 
-Don't wait. This deal won't last. Scan to reserve. Available now at San Diego Harley-Davidson."""
+Available now at an unbeatable price. This opportunity won't wait. And neither should you.
+
+Scan to reserve. San Diego Harley-Davidson."""
+
+    def _validate_word_count(self, script: str) -> bool:
+        """Validate script is within target word count for 30-second delivery"""
+        word_count = len(script.split())
+        is_valid = MIN_WORD_COUNT <= word_count <= MAX_WORD_COUNT
+        if not is_valid:
+            logger.warning(f"Script word count {word_count} outside target range ({MIN_WORD_COUNT}-{MAX_WORD_COUNT})")
+        return is_valid
+
+    def get_script_duration_estimate(self, script: str) -> float:
+        """Estimate script duration in seconds (2.5 words/second for dramatic delivery)"""
+        word_count = len(script.split())
+        return word_count / 2.5
 
 
 # Example usage
