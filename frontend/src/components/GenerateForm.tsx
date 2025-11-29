@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { ToastType } from '../App'
+import ResultPanel from './ResultPanel'
 import './GenerateForm.css'
 
 interface GenerateFormProps {
@@ -23,6 +24,11 @@ export interface FormData {
   photo_urls: string
 }
 
+interface GenerationResult {
+  videoUrl: string
+  stockNumber: string
+}
+
 const initialFormData: FormData = {
   stock_number: '',
   vin: '',
@@ -43,36 +49,52 @@ const initialFormData: FormData = {
 function GenerateForm({ showToast }: GenerateFormProps) {
   const [formData, setFormData] = useState<FormData>(initialFormData)
   const [isLoading, setIsLoading] = useState(false)
+  const [isRegenerating, setIsRegenerating] = useState(false)
+  const [result, setResult] = useState<GenerationResult | null>(null)
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
     setFormData(prev => ({ ...prev, [name]: value }))
   }
 
+  const generateVideo = async () => {
+    const payload = {
+      ...formData,
+      year: parseInt(formData.year),
+      price: parseFloat(formData.price),
+      odometer: formData.odometer ? parseInt(formData.odometer) : null
+    }
+
+    const response = await fetch('/api/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    })
+
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.detail || 'Generation failed')
+    }
+
+    const data = await response.json()
+    return data
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
+    setResult(null)
 
     try {
-      const payload = {
-        ...formData,
-        year: parseInt(formData.year),
-        price: parseFloat(formData.price),
-        odometer: formData.odometer ? parseInt(formData.odometer) : null
-      }
-
-      const response = await fetch('/api/generate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
+      const data = await generateVideo()
+      
+      // Expecting backend to return { video_url: "https://cloudinary.com/..." }
+      setResult({
+        videoUrl: data.video_url,
+        stockNumber: formData.stock_number
       })
-
-      if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.detail || 'Generation failed')
-      }
-
-      showToast('Video generation started!', 'success')
+      
+      showToast('Video generated successfully!', 'success')
     } catch (error) {
       showToast(error instanceof Error ? error.message : 'Generation failed', 'error')
     } finally {
@@ -80,8 +102,28 @@ function GenerateForm({ showToast }: GenerateFormProps) {
     }
   }
 
+  const handleRegenerate = async () => {
+    setIsRegenerating(true)
+
+    try {
+      const data = await generateVideo()
+      
+      setResult({
+        videoUrl: data.video_url,
+        stockNumber: formData.stock_number
+      })
+      
+      showToast('Video regenerated successfully!', 'success')
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : 'Regeneration failed', 'error')
+    } finally {
+      setIsRegenerating(false)
+    }
+  }
+
   const clearForm = () => {
     setFormData(initialFormData)
+    setResult(null)
   }
 
   return (
@@ -176,7 +218,7 @@ function GenerateForm({ showToast }: GenerateFormProps) {
         </div>
 
         <div className="form-actions">
-          <button type="submit" className="btn btn-primary" disabled={isLoading}>
+          <button type="submit" className="btn btn-primary" disabled={isLoading || isRegenerating}>
             {isLoading ? (
               <>
                 <div className="spinner"></div>
@@ -187,7 +229,7 @@ function GenerateForm({ showToast }: GenerateFormProps) {
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                 </svg>
-                Generate Video Assets
+                Generate Video
               </>
             )}
           </button>
@@ -196,6 +238,16 @@ function GenerateForm({ showToast }: GenerateFormProps) {
           </button>
         </div>
       </form>
+
+      {result && (
+        <ResultPanel
+          videoUrl={result.videoUrl}
+          stockNumber={result.stockNumber}
+          onRegenerate={handleRegenerate}
+          isRegenerating={isRegenerating}
+          showToast={showToast}
+        />
+      )}
     </div>
   )
 }
