@@ -29,6 +29,8 @@
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .form-group.full-width {
@@ -185,10 +187,18 @@ textarea {
 .music-select-container {
   display: flex;
   gap: 0.5rem;
+  width: 100%;
 }
 
 .music-select-container select {
   flex: 1;
+  min-width: 0;
+  max-width: calc(100% - 50px);
+}
+
+.music-select-container select option {
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .btn-preview {
