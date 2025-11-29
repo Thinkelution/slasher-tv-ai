@@ -5,6 +5,7 @@ QR Code Generator for motorcycle listings
 import qrcode
 from PIL import Image
 from pathlib import Path
+from typing import Optional, Tuple, Union
 import logging
 
 logging.basicConfig(level=logging.INFO)
