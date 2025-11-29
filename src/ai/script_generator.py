@@ -31,6 +31,76 @@ TARGET_WORD_COUNT = 75
 MIN_WORD_COUNT = 70
 MAX_WORD_COUNT = 85
 
+# Number to words conversion for TTS
+NUM_WORDS = {
+    0: 'zero', 1: 'one', 2: 'two', 3: 'three', 4: 'four',
+    5: 'five', 6: 'six', 7: 'seven', 8: 'eight', 9: 'nine',
+    10: 'ten', 11: 'eleven', 12: 'twelve', 13: 'thirteen',
+    14: 'fourteen', 15: 'fifteen', 16: 'sixteen', 17: 'seventeen',
+    18: 'eighteen', 19: 'nineteen', 20: 'twenty', 30: 'thirty',
+    40: 'forty', 50: 'fifty', 60: 'sixty', 70: 'seventy',
+    80: 'eighty', 90: 'ninety'
+}
+
+def number_to_words(n: int) -> str:
+    """Convert a number to words for TTS-friendly output"""
+    if n < 0:
+        return 'negative ' + number_to_words(-n)
+    if n < 20:
+        return NUM_WORDS[n]
+    if n < 100:
+        tens, unit = divmod(n, 10)
+        return NUM_WORDS[tens * 10] + ('' if unit == 0 else ' ' + NUM_WORDS[unit])
+    if n < 1000:
+        hundreds, remainder = divmod(n, 100)
+        return NUM_WORDS[hundreds] + ' hundred' + ('' if remainder == 0 else ' ' + number_to_words(remainder))
+    if n < 10000:
+        thousands, remainder = divmod(n, 1000)
+        return number_to_words(thousands) + ' thousand' + ('' if remainder == 0 else ' ' + number_to_words(remainder))
+    if n < 1000000:
+        thousands, remainder = divmod(n, 1000)
+        return number_to_words(thousands) + ' thousand' + ('' if remainder == 0 else ' ' + number_to_words(remainder))
+    return str(n)  # Fallback for very large numbers
+
+def convert_numbers_in_text(text: str) -> str:
+    """Convert all numbers in text to words for better TTS"""
+    import re
+    
+    # Convert prices like $19,999 or $6,999
+    def replace_price(match):
+        price_str = match.group(0).replace('$', '').replace(',', '')
+        try:
+            price = int(float(price_str))
+            return number_to_words(price) + ' dollars'
+        except:
+            return match.group(0)
+    
+    text = re.sub(r'\$[\d,]+', replace_price, text)
+    
+    # Convert years like 2024
+    def replace_year(match):
+        year = int(match.group(0))
+        if 2000 <= year <= 2099:
+            return 'twenty ' + number_to_words(year - 2000).replace('zero', 'twenty')
+        elif 1900 <= year <= 1999:
+            return 'nineteen ' + number_to_words(year - 1900)
+        return match.group(0)
+    
+    text = re.sub(r'\b(19|20)\d{2}\b', replace_year, text)
+    
+    # Convert standalone numbers
+    def replace_number(match):
+        try:
+            num = int(match.group(0).replace(',', ''))
+            return number_to_words(num)
+        except:
+            return match.group(0)
+    
+    text = re.sub(r'\b\d{1,3}(?:,\d{3})*\b', replace_number, text)
+    text = re.sub(r'\b\d+\b', replace_number, text)
+    
+    return text
+
 
 class ScriptGenerator:
     """Generate AI-powered ad scripts for motorcycle videos - optimized for 30-second voiceover"""
@@ -118,6 +188,9 @@ class ScriptGenerator:
         else:
             raise ValueError(f"Unknown provider: {self.provider}")
 
+        # Convert any remaining numbers to words for better TTS
+        script = convert_numbers_in_text(script)
+        
         logger.info(f"Generated script for {year} {make} {model}")
         return script
 
@@ -152,12 +225,12 @@ class ScriptGenerator:
 
         details_text = " | ".join(details) if details else "Premium condition"
 
-        # Style guidance for bold TV commercial voice
+        # Style guidance - Enthusiastic Salesman Voice
         style_guide = {
-            "aggressive": "BOLD, POWERFUL, COMMANDING. Short punchy sentences. Deep authoritative tone. Think monster truck rally announcer meets luxury car commercial.",
-            "smooth": "SOPHISTICATED, CONFIDENT, PREMIUM. Flowing elegant sentences. Think luxury automotive brand with prestige.",
-            "professional": "TRUSTWORTHY, AUTHORITATIVE, COMPELLING. Clear direct sentences. Think premium dealership commercial."
-        }.get(style, "Bold and commanding")
+            "aggressive": "ENTHUSIASTIC CAR SALESMAN who's genuinely EXCITED about this deal. High energy, passionate, like you can't WAIT to tell them about this bike. Think local dealership TV commercial where the owner is pumped up.",
+            "smooth": "CONFIDENT SALESMAN who knows this is a premium product. Smooth, persuasive, like a luxury car salesman who lets the product speak for itself.",
+            "professional": "TRUSTWORTHY DEALER who wants to help you find your dream bike. Warm, genuine, like talking to a friend who happens to sell motorcycles."
+        }.get(style, "Enthusiastic and genuine")
 
         # Include description snippet if available
         desc_snippet = ""
@@ -165,53 +238,56 @@ class ScriptGenerator:
             # Extract key selling points from description
             desc_snippet = f"\n\nKey Details (use as inspiration):\n{description[:400]}"
 
-        prompt = f"""You are writing a professional 30-SECOND TV COMMERCIAL SCRIPT for a bold male voiceover artist.
+        prompt = f"""You are an ENTHUSIASTIC MOTORCYCLE SALESMAN recording a 30-second TV/radio commercial.
 
-MOTORCYCLE:
+You LOVE this bike and you're EXCITED to tell people about this amazing deal!
+
+MOTORCYCLE YOU'RE SELLING:
 • {year} {make} {model}
 • Price: ${price:,.0f}
 • {details_text}
 {desc_snippet}
 
-CRITICAL TIMING REQUIREMENTS:
-- EXACTLY {TARGET_WORD_COUNT} words (range: {MIN_WORD_COUNT}-{MAX_WORD_COUNT})
-- Speaking rate: 2.5 words/second for bold dramatic delivery
-- Total duration: 30 seconds when spoken
+TIMING: Exactly {TARGET_WORD_COUNT} words ({MIN_WORD_COUNT}-{MAX_WORD_COUNT} range) = 30 seconds when spoken
 
-SCRIPT STRUCTURE (30 seconds total):
-[0-3 sec] HOOK: One powerful opening line that grabs attention
-[3-12 sec] FEATURES: 2-3 compelling benefits/features with emotional impact  
-[12-20 sec] THE OFFER: Price reveal with urgency and value proposition
-[20-27 sec] CALL TO ACTION: Create urgency, drive action
-[27-30 sec] TAG: "Scan to reserve. San Diego Harley-Davidson."
+YOUR PERSONALITY: {style_guide}
 
-VOICE STYLE: {style_guide}
+HOW A REAL SALESMAN TALKS:
+1. EXCITED and GENUINE - you actually love motorcycles
+2. PERSONAL - use "you", "your", talk directly to the viewer
+3. URGENT but not pushy - this is a great opportunity they shouldn't miss
+4. CONFIDENT - you know this is an amazing bike at a great price
+5. NATURAL flow - not robotic, like you're talking to a friend
+6. HIGHLIGHT THE VALUE - make them feel they're getting a steal
 
-RULES FOR ENTHUSIASTIC SALESMAN VOICE:
-1. Write for a DEEP, BOLD, ENTHUSIASTIC male voice - like a passionate car salesman
-2. Use SHORT, PUNCHY sentences that PUNCH HARD
-3. Add DRAMATIC PAUSES using "..." for breath and impact (e.g., "This bike... is a BEAST.")
-4. Use ALL CAPS for words that need EMPHASIS (the voice will stress these)
-5. NO questions - only powerful STATEMENTS
-6. NO filler words (um, uh, well, so, just)
-7. Spell out ALL numbers naturally:
-   - Years: "twenty twenty-four" not "2024"
-   - Prices: "seventeen thousand, four ninety-nine" not "$17,499"
-   - Mileage: "only eight hundred miles" not "800 miles"
-8. Focus on EMOTION, EXCITEMENT, and LIFESTYLE over technical specs
-9. Create URGENCY like a LIMITED TIME offer - make them feel they'll MISS OUT
-10. Add energy words: POWER, BEAST, UNLEASH, DOMINATE, CONQUER, LEGENDARY
-11. End EXACTLY with: "Scan to reserve... San Diego Harley-Davidson."
+SCRIPT FLOW:
+- HOOK: Grab attention with something exciting
+- THE BIKE: What makes this bike special (2-3 key points)
+- THE DEAL: Price reveal - make it sound like an incredible value
+- THE CLOSE: Create urgency, tell them to act now
+- TAG: Always end with "Scan to reserve. San Diego Harley-Davidson."
 
-EXAMPLE SCRIPTS WITH PROPER FORMATTING:
+IMPORTANT RULES:
+- ALWAYS write ALL numbers as WORDS - the voice struggles with digits:
+  • Years: "twenty twenty-four" NOT "2024"
+  • Prices: "six thousand nine hundred ninety-nine dollars" NOT "$6,999"
+  • Mileage: "eight hundred miles" NOT "800 miles"
+  • Engine: "one seventeen" NOT "117"
+  • NEVER use digits 0-9 anywhere in the script
+- NO robotic pauses or weird formatting
+- NO questions - confident statements only
+- Sound like a REAL PERSON, not AI
+- Be ENTHUSIASTIC without being cheesy
 
-Example 1 (Aggressive - 75 words):
-"POWER... UNLEASHED. The twenty twenty-four Harley-Davidson Low Rider S. This is RAW American muscle... wrapped in chrome and ATTITUDE. A thundering engine that announces your arrival... before you're even SEEN. All this BEAST... for just seventeen thousand, four ninety-nine. This isn't just a motorcycle... it's a STATEMENT. And deals like this... DON'T last. Scan to reserve... San Diego Harley-Davidson."
+EXAMPLE SALESMAN SCRIPTS:
 
-Example 2 (Smooth - 74 words):
-"Some machines are built to ride... This one... is built to be REMEMBERED. The twenty twenty-four Harley-Davidson. Precision engineering meets timeless American CRAFTSMANSHIP. Every curve... every detail... designed for those who REFUSE to blend in. Yours... for just nineteen thousand, nine ninety-nine. EXCELLENCE... within reach. Your next chapter... starts NOW. Scan to reserve... San Diego Harley-Davidson."
+Example 1 (High Energy):
+"Ladies and gentlemen, feast your eyes on this beauty! The twenty twenty-four Harley-Davidson Low Rider ST. We're talking Milwaukee-Eight one seventeen power, that unmistakable Harley rumble, and styling that turns heads everywhere you go. And here's the best part - we've got this incredible machine priced at just twenty-two thousand four ninety-nine. At this price, it's not gonna last. Get down here today. Scan to reserve. San Diego Harley-Davidson."
 
-NOW WRITE THE SCRIPT (just the voiceover text, nothing else):"""
+Example 2 (Confident):
+"Now this is what I'm talking about. A twenty twenty-three Street Glide in pristine condition, only eight hundred miles on the clock. Somebody barely broke her in and now she's yours for the taking. Full touring setup, premium sound, ready to eat up the highway. We're letting her go for eighteen thousand nine ninety-nine. Trust me, deals like this don't come around often. Scan to reserve. San Diego Harley-Davidson."
+
+NOW WRITE YOUR SCRIPT (just the voiceover text, nothing else):"""
 
         return prompt
 
