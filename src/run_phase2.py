@@ -171,8 +171,8 @@ if __name__ == "__main__":
     argparser.add_argument("--index", type=int, default=0, help="Listing index (0-based)")
     argparser.add_argument("--style", choices=["aggressive", "smooth", "professional"], 
                           default="aggressive", help="Script/voice style")
-    argparser.add_argument("--voice", choices=["adam", "arnold", "josh", "sam"],
-                          default="adam", help="ElevenLabs voice preset")
+    argparser.add_argument("--voice", choices=["dan", "adam", "arnold", "josh", "sam"],
+                          default="dan", help="ElevenLabs voice preset (dan=enthusiastic salesman)")
     
     args = argparser.parse_args()
     run_phase2(

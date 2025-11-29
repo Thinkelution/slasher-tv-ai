@@ -21,6 +21,7 @@ ELEVENLABS_API_URL = "https://api.elevenlabs.io/v1"
 # Recommended voices for TV commercial (bold male voices)
 VOICE_PRESETS = {
     # Deep, authoritative male voices ideal for TV commercials
+    "dan": "CwhRBWXzGAHq8TQ4Fs17",       # Dan - Enthusiastic, natural salesman voice (BEST)
     "adam": "pNInz6obpgDQGcFmaJgB",      # Deep, narrative voice
     "arnold": "VR6AewLTigWG4xSOukaG",    # Strong, bold voice  
     "josh": "TxGEqnHWrfWFTfGW9XjX",      # Deep, dramatic voice
@@ -28,8 +29,8 @@ VOICE_PRESETS = {
     "marcus": "xkBjKPxqt9ZFz4HUALnM",    # Bold announcer style (custom)
 }
 
-# Default voice for TV commercials - deep, bold, authoritative
-DEFAULT_VOICE = "adam"
+# Default voice for TV commercials - Dan sounds most natural and enthusiastic
+DEFAULT_VOICE = "dan"
 
 
 class VoiceGenerator:
@@ -146,22 +147,22 @@ class VoiceGenerator:
         Returns:
             Path to generated audio file
         """
-        # Voice settings optimized for each commercial style
+        # Voice settings optimized for natural, enthusiastic salesman delivery
         style_settings = {
             "aggressive": {
-                "stability": 0.30,       # More dynamic, energetic
-                "similarity_boost": 0.80,
-                "style": 0.55            # More dramatic
+                "stability": 0.25,       # Lower = MORE expressive & natural
+                "similarity_boost": 0.85, # Higher = clearer pronunciation
+                "style": 0.70            # Higher = MORE enthusiastic & dramatic
             },
             "smooth": {
-                "stability": 0.45,       # More controlled, elegant
-                "similarity_boost": 0.75,
-                "style": 0.35            # Subtle style
+                "stability": 0.35,       # Controlled but still natural
+                "similarity_boost": 0.80,
+                "style": 0.50            # Moderate enthusiasm
             },
             "professional": {
-                "stability": 0.40,       # Balanced delivery
-                "similarity_boost": 0.78,
-                "style": 0.40            # Moderate style
+                "stability": 0.30,       # Natural but authoritative
+                "similarity_boost": 0.82,
+                "style": 0.55            # Confident delivery
             }
         }
 
