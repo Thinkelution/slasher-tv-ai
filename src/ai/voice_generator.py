@@ -266,3 +266,5 @@ Scan to reserve. San Diego Harley-Davidson."""
         print(f"\n✗ Error: {e}")
         print("  Make sure ELEVENLABS_API_KEY is set in your environment or .env file")
 
+
+
