@@ -1,6 +1,10 @@
 """
-Phase 2: AI Generation Layer - Script & Voice Generation
-Generates professional 30-second TV commercial scripts and voiceovers
+Phase 2: AI Generation Layer - Script, Voice & Image Processing
+Generates professional 30-second TV commercial content:
+- AI-powered scripts (OpenAI)
+- Voice synthesis (ElevenLabs)
+- Background removal (Removal.AI)
+- QR codes for listings
 """
 
 import sys
@@ -11,7 +15,7 @@ import logging
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from src.data import FeedParser, AssetManager
-from src.ai import ScriptGenerator, VoiceGenerator, QRGenerator
+from src.ai import ScriptGenerator, VoiceGenerator, QRGenerator, ImageProcessor
 
 logging.basicConfig(
     level=logging.INFO,
@@ -24,15 +28,18 @@ def run_phase2(
     csv_path: str = "sample-feed.csv",
     listing_index: int = 0,
     style: str = "aggressive",
-    voice: str = "adam"
+    voice: str = "adam",
+    process_images: bool = True,
+    max_images: int = 2
 ):
     """
     Execute Phase 2: AI Content Generation Pipeline
     
     1. Load listing from Phase 1
-    2. Generate professional 30-second script (OpenAI)
-    3. Generate voiceover audio (ElevenLabs)
-    4. Generate QR code for listing URL
+    2. Process images - remove backgrounds (Removal.AI)
+    3. Generate professional 30-second script (OpenAI)
+    4. Generate voiceover audio (ElevenLabs)
+    5. Generate QR code for listing URL
     """
     logger.info("=" * 60)
     logger.info("PHASE 2: AI GENERATION LAYER")
@@ -59,8 +66,36 @@ def run_phase2(
     print(f"   Price: ${listing.price:,.0f}")
     print(f"   Directory: {listing_dir}")
     
-    # Step 2: Generate Script
-    logger.info("\n[Step 2/4] Generating professional script (OpenAI)...")
+    # Step 2: Process Images (Background Removal)
+    if process_images:
+        logger.info("\n[Step 2/5] Processing images - removing backgrounds (Removal.AI)...")
+        try:
+            img_processor = ImageProcessor()
+            results = img_processor.process_listing_images(
+                listing_dir=listing_dir,
+                process_all=False,
+                max_images=max_images
+            )
+            
+            success_count = sum(1 for r in results if r.success)
+            print(f"\n🖼️  IMAGE PROCESSING:")
+            print(f"   Processed: {success_count}/{len(results)} images")
+            
+            for r in results:
+                if r.success:
+                    print(f"   ✓ {r.output_path.name} ({r.file_size_kb:.1f} KB)")
+                else:
+                    print(f"   ✗ {r.input_path.name}: {r.error}")
+                    
+        except Exception as e:
+            logger.error(f"Image processing failed: {e}")
+            print(f"\n⚠️  Image processing failed: {e}")
+            print("   Make sure REMOVALAI_API_KEY is set in your .env file")
+    else:
+        logger.info("\n[Step 2/5] Skipping image processing...")
+    
+    # Step 3: Generate Script
+    logger.info("\n[Step 3/5] Generating professional script (OpenAI)...")
     try:
         script_gen = ScriptGenerator(provider="openai")
         script = script_gen.generate_script(
@@ -98,9 +133,9 @@ def run_phase2(
         print("   Make sure OPENAI_API_KEY is set in your .env file")
         script = None
     
-    # Step 3: Generate Voiceover
+    # Step 4: Generate Voiceover
     if script:
-        logger.info("\n[Step 3/4] Generating voiceover (ElevenLabs)...")
+        logger.info("\n[Step 4/5] Generating voiceover (ElevenLabs)...")
         try:
             voice_gen = VoiceGenerator(voice_name=voice)
             audio_path = asset_manager.get_audio_path(listing, "voiceover")
@@ -126,10 +161,10 @@ def run_phase2(
             print(f"\n⚠️  Voiceover generation failed: {e}")
             print("   Make sure ELEVENLABS_API_KEY is set in your .env file")
     else:
-        logger.info("\n[Step 3/4] Skipping voiceover (no script)...")
+        logger.info("\n[Step 4/5] Skipping voiceover (no script)...")
     
-    # Step 4: Generate QR Code
-    logger.info("\n[Step 4/4] Generating QR code...")
+    # Step 5: Generate QR Code
+    logger.info("\n[Step 5/5] Generating QR code...")
     if listing.listing_url:
         try:
             qr_gen = QRGenerator()
@@ -155,7 +190,8 @@ def run_phase2(
     summary = asset_manager.get_asset_summary(listing)
     print(f"\n📊 ASSET SUMMARY:")
     print(f"   Directory: {summary['listing_dir']}")
-    print(f"   Images: {summary['images']}")
+    print(f"   Original Images: {summary['images']}")
+    print(f"   Processed Images: {summary['processed_images']}")
     print(f"   Script: {'✓' if summary['has_script'] else '✗'}")
     print(f"   Voiceover: {'✓' if summary['has_voiceover'] else '✗'}")
     print(f"   QR Code: {'✓' if summary['has_qr_code'] else '✗'}")
@@ -173,12 +209,17 @@ if __name__ == "__main__":
                           default="aggressive", help="Script/voice style")
     argparser.add_argument("--voice", choices=["dan", "adam", "arnold", "josh", "sam"],
                           default="dan", help="ElevenLabs voice preset (dan=enthusiastic salesman)")
-    
+    argparser.add_argument("--no-images", action="store_true",
+                          help="Skip image processing")
+    argparser.add_argument("--max-images", type=int, default=2,
+                          help="Max images to process (default: 2)")
     args = argparser.parse_args()
     run_phase2(
         csv_path=args.csv,
         listing_index=args.index,
         style=args.style,
-        voice=args.voice
+        voice=args.voice,
+        process_images=not args.no_images,
+        max_images=args.max_images
     )
 
