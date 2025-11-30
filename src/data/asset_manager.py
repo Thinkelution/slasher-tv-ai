@@ -103,7 +103,7 @@ class AssetManager:
 
     def get_processed_image(self, listing: MotorcycleListing, image_idx: int = 0) -> Optional[Path]:
         """
-        Get processed (background removed) image
+        Get processed (background removed) image from processed subfolder
 
         Args:
             listing: MotorcycleListing object
@@ -113,11 +113,52 @@ class AssetManager:
             Path to processed image or None
         """
         listing_dir = self.get_listing_dir(listing)
-        processed_path = listing_dir / f"processed_{image_idx:02d}.png"
-
+        processed_dir = listing_dir / "processed"
+        
+        # Look for processed image in processed subfolder
+        processed_path = processed_dir / f"photo_{image_idx:02d}_nobg.png"
         if processed_path.exists():
             return processed_path
+        
+        # Fallback: check old naming convention
+        old_path = listing_dir / f"processed_{image_idx:02d}.png"
+        if old_path.exists():
+            return old_path
+            
         return None
+
+    def get_processed_dir(self, listing: MotorcycleListing) -> Path:
+        """
+        Get processed images directory for listing
+
+        Args:
+            listing: MotorcycleListing object
+
+        Returns:
+            Path to processed directory
+        """
+        listing_dir = self.get_listing_dir(listing)
+        processed_dir = listing_dir / "processed"
+        processed_dir.mkdir(parents=True, exist_ok=True)
+        return processed_dir
+
+    def get_all_processed_images(self, listing: MotorcycleListing) -> List[Path]:
+        """
+        Get all processed images for a listing
+
+        Args:
+            listing: MotorcycleListing object
+
+        Returns:
+            List of paths to processed images
+        """
+        listing_dir = self.get_listing_dir(listing)
+        processed_dir = listing_dir / "processed"
+        
+        if not processed_dir.exists():
+            return []
+        
+        return sorted(processed_dir.glob("*_nobg.png"))
 
     def set_processed_image_path(
         self,
@@ -134,9 +175,8 @@ class AssetManager:
         Returns:
             Path where processed image should be saved
         """
-        listing_dir = self.get_listing_dir(listing)
-        listing_dir.mkdir(parents=True, exist_ok=True)
-        return listing_dir / f"processed_{image_idx:02d}.png"
+        processed_dir = self.get_processed_dir(listing)
+        return processed_dir / f"photo_{image_idx:02d}_nobg.png"
 
     def get_qr_code_path(self, listing: MotorcycleListing) -> Path:
         """
@@ -217,11 +257,18 @@ class AssetManager:
             Dictionary with asset counts and paths
         """
         listing_dir = self.get_listing_dir(listing)
+        processed_dir = listing_dir / "processed"
+
+        # Count processed images in processed subfolder
+        processed_count = 0
+        if processed_dir.exists():
+            processed_count = len(list(processed_dir.glob("*_nobg.png")))
 
         summary = {
             'listing_dir': str(listing_dir),
             'images': len(list(listing_dir.glob("photo_*.jpg"))),
-            'processed_images': len(list(listing_dir.glob("processed_*.png"))),
+            'processed_images': processed_count,
+            'processed_dir': str(processed_dir) if processed_dir.exists() else None,
             'has_qr_code': (listing_dir / "qr_code.png").exists(),
             'has_voiceover': (listing_dir / "voiceover.mp3").exists(),
             'has_script': (listing_dir / "script.txt").exists(),
