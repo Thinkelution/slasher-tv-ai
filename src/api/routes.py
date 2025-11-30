@@ -96,8 +96,10 @@ async def generate_video(request: GenerateRequest):
                 for idx, url in enumerate(photo_list):
                     try:
                         output_path = listing_dir / f"photo_{idx:02d}.jpg"
-                        downloader.download_single_image(url, output_path)
-                        results["images_downloaded"] += 1
+                        # Use private _download_image method
+                        success = downloader._download_image(url, output_path)
+                        if success:
+                            results["images_downloaded"] += 1
                     except Exception as e:
                         logger.warning(f"Failed to download image {idx}: {e}")
         
