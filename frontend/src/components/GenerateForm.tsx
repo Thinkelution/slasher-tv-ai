@@ -38,9 +38,31 @@ interface MusicTrack {
 // Jamendo API client ID (free tier)
 const JAMENDO_CLIENT_ID = '2c9a11b9'
 
+interface R2Asset {
+  url: string
+  key: string
+  content_type: string
+  size_bytes: number
+}
+
+interface GenerationAssets {
+  images_downloaded: number
+  images_processed: number
+  script_generated: boolean
+  script?: string
+  voiceover_generated: boolean
+  qr_generated: boolean
+  uploaded_to_r2: boolean
+  r2_urls?: {
+    processed_images: R2Asset[]
+    voiceover: R2Asset | null
+    qr_code: R2Asset | null
+  }
+}
+
 interface GenerationResult {
-  videoUrl: string
   stockNumber: string
+  assets: GenerationAssets
 }
 
 const initialFormData: FormData = {
@@ -153,11 +175,9 @@ function GenerateForm({ showToast }: GenerateFormProps) {
   }
 
   const generateVideo = async () => {
+    // Send data as strings (API expects strings for year, price, odometer)
     const payload = {
       ...formData,
-      year: parseInt(formData.year),
-      price: parseFloat(formData.price),
-      odometer: formData.odometer ? parseInt(formData.odometer) : null,
       music_volume: formData.music_volume
     }
 
@@ -184,13 +204,13 @@ function GenerateForm({ showToast }: GenerateFormProps) {
     try {
       const data = await generateVideo()
       
-      // Expecting backend to return { video_url: "https://cloudinary.com/..." }
+      // Backend returns { success, stock_number, listing_dir, assets, message }
       setResult({
-        videoUrl: data.video_url,
-        stockNumber: formData.stock_number
+        stockNumber: data.stock_number,
+        assets: data.assets
       })
       
-      showToast('Video generated successfully!', 'success')
+      showToast('Assets generated successfully!', 'success')
     } catch (error) {
       showToast(error instanceof Error ? error.message : 'Generation failed', 'error')
     } finally {
@@ -205,11 +225,11 @@ function GenerateForm({ showToast }: GenerateFormProps) {
       const data = await generateVideo()
       
       setResult({
-        videoUrl: data.video_url,
-        stockNumber: formData.stock_number
+        stockNumber: data.stock_number,
+        assets: data.assets
       })
       
-      showToast('Video regenerated successfully!', 'success')
+      showToast('Assets regenerated successfully!', 'success')
     } catch (error) {
       showToast(error instanceof Error ? error.message : 'Regeneration failed', 'error')
     } finally {
@@ -386,8 +406,8 @@ function GenerateForm({ showToast }: GenerateFormProps) {
 
       {result && (
         <ResultPanel
-          videoUrl={result.videoUrl}
           stockNumber={result.stockNumber}
+          assets={result.assets}
           onRegenerate={handleRegenerate}
           isRegenerating={isRegenerating}
           showToast={showToast}
