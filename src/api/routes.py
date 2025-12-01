@@ -43,7 +43,7 @@ class GenerateRequest(BaseModel):
     music_volume: int = 30
     
     # Optional settings
-    max_images: int = Field(default=2, description="Max images to process")
+    max_images: int = Field(default=100, description="Max images to process (set high to process all)")
     process_images: bool = Field(default=True, description="Enable background removal")
     upload_to_r2: bool = Field(default=True, description="Upload assets to Cloudflare R2")
 
@@ -112,8 +112,8 @@ async def generate_video(request: GenerateRequest):
                 img_processor = ImageProcessor()
                 process_results = img_processor.process_listing_images(
                     listing_dir=listing_dir,
-                    process_all=False,
-                    max_images=request.max_images
+                    process_all=True,
+                    max_images=None
                 )
                 results["images_processed"] = sum(1 for r in process_results if r.success)
             except Exception as e:
