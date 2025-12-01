@@ -37,3 +37,4 @@ async def root():
 async def health_check():
     return {"status": "healthy"}
 
+

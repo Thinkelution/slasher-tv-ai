@@ -14,6 +14,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 from src.data import FeedParser, ImageDownloader, AssetManager
 from src.ai import ScriptGenerator, VoiceGenerator, QRGenerator, ImageProcessor
+from src.utils import R2Uploader
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -44,6 +45,7 @@ class GenerateRequest(BaseModel):
     # Optional settings
     max_images: int = Field(default=2, description="Max images to process")
     process_images: bool = Field(default=True, description="Enable background removal")
+    upload_to_r2: bool = Field(default=True, description="Upload assets to Cloudflare R2")
 
 
 class GenerateResponse(BaseModel):
@@ -178,6 +180,23 @@ async def generate_video(request: GenerateRequest):
                 
             except Exception as e:
                 logger.error(f"QR generation failed: {e}")
+        
+        # Step 6: Upload to Cloudflare R2
+        if request.upload_to_r2:
+            logger.info("Uploading assets to Cloudflare R2...")
+            try:
+                r2_uploader = R2Uploader()
+                r2_results = r2_uploader.upload_listing_assets(
+                    listing_dir=listing_dir,
+                    stock_number=request.stock_number
+                )
+                results["r2_urls"] = r2_results
+                results["uploaded_to_r2"] = True
+                logger.info(f"✓ Assets uploaded to R2")
+            except Exception as e:
+                logger.warning(f"R2 upload failed: {e}")
+                results["r2_error"] = str(e)
+                results["uploaded_to_r2"] = False
         
         logger.info(f"Generation complete for stock #{request.stock_number}")
         

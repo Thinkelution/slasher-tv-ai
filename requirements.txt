@@ -41,5 +41,5 @@ fastapi==0.109.0
 uvicorn==0.27.0
 python-multipart==0.0.6
 
-# Cloud Storage
-cloudinary==1.36.0
+# Cloud Storage (Cloudflare R2)
+boto3==1.34.0
