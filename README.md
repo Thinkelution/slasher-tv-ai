@@ -17,16 +17,20 @@ The Slasher TV AI system transforms motorcycle inventory data into compelling 30
 
 - **Automated CSV Parsing**: Reads dealer inventory feeds
 - **Intelligent Image Downloading**: Parallel download of motorcycle photos
+- **Background Removal**: AI-powered image processing with rembg
 - **AI Script Generation**: OpenAI GPT-4 or Anthropic Claude for compelling ad copy
+- **Text-to-Speech**: AI voiceover generation with gTTS
 - **Professional Video Composition**: Multiple templates (clean, dark, fire themes)
 - **QR Code Generation**: Instant reservation links
-- **Asset Management**: Organized file structure for all media
+- **Cloud Storage**: Cloudflare R2 integration for asset hosting
+- **REST API**: FastAPI backend for programmatic access
+- **Web Dashboard**: React frontend for easy management
 - **Batch Processing**: Handle hundreds of listings efficiently
 
 ## Project Structure
 
 ```
-slasher-tv-ai/
+slasher/
 ├── src/
 │   ├── data/                    # Data processing
 │   │   ├── data_models.py       # Pydantic models
@@ -35,21 +39,46 @@ slasher-tv-ai/
 │   │   └── asset_manager.py     # Asset organization
 │   ├── ai/                      # AI generation
 │   │   ├── script_generator.py  # AI script writer
-│   │   └── qr_generator.py      # QR code creator
-│   ├── video/                   # Video composition (coming soon)
-│   │   ├── video_composer.py
-│   │   └── templates/
-│   └── main.py                  # Main pipeline
+│   │   ├── qr_generator.py      # QR code creator
+│   │   ├── image_processor.py   # Background removal
+│   │   └── voice_generator.py   # Text-to-Speech
+│   ├── api/                     # REST API
+│   │   ├── app.py               # FastAPI application
+│   │   └── routes.py            # API endpoints
+│   ├── utils/                   # Utilities
+│   │   └── r2_uploader.py       # Cloudflare R2 integration
+│   ├── main.py                  # Main pipeline
+│   ├── run_phase1.py            # Phase 1: Data collection
+│   └── run_phase2.py            # Phase 2: AI processing
+├── frontend/                    # React Web Dashboard
+│   ├── src/
+│   │   ├── App.tsx              # Main application
+│   │   └── components/
+│   │       ├── GenerateForm.tsx # Generation form
+│   │       ├── ListingsTable.tsx# Listings display
+│   │       ├── ResultPanel.tsx  # Results viewer
+│   │       └── Toast.tsx        # Notifications
+│   ├── package.json
+│   └── vite.config.ts
 ├── assets/                      # Downloaded assets
 │   ├── branding/
 │   ├── backgrounds/
 │   ├── music/
 │   └── {dealer_id}/{stock_number}/
+│       ├── photo_XX.jpg         # Original images
+│       ├── processed/           # Processed images
+│       │   └── photo_XX_nobg.png
+│       ├── script.txt           # Generated script
+│       ├── voiceover.mp3        # Generated audio
+│       └── qr_code.png          # QR code
 ├── output/                      # Generated videos
 ├── config/
 │   └── config.yaml              # Configuration
+├── run_api.py                   # API server launcher
 ├── sample-feed.csv              # Sample inventory
 ├── requirements.txt             # Python dependencies
+├── ARCHITECTURE.md              # System architecture docs
+├── QUICKSTART.md                # Quick start guide
 └── README.md
 ```
 
@@ -58,33 +87,57 @@ slasher-tv-ai/
 ### Prerequisites
 
 - Python 3.10+
+- Node.js 18+ (for frontend)
 - pip
 - API keys for OpenAI or Anthropic (for script generation)
+- Cloudflare R2 credentials (for cloud storage)
 
 ### Setup
 
 1. Clone repository:
 ```bash
 git clone <repository-url>
-cd slasher-tv-ai
+cd slasher
 ```
 
-2. Install dependencies:
+2. Install Python dependencies:
 ```bash
 pip install -r requirements.txt
 ```
 
-3. Configure environment:
+3. Install frontend dependencies:
+```bash
+cd frontend
+npm install
+cd ..
+```
+
+4. Configure environment:
 ```bash
 cp .env.example .env
 # Edit .env with your API keys
 ```
 
-4. (Optional) For GPU acceleration, install CUDA-enabled PyTorch
+5. (Optional) For GPU acceleration, install CUDA-enabled PyTorch
 
 ## Usage
 
-### Quick Start
+### Option 1: Web Dashboard (Recommended)
+
+Start the API server and frontend:
+
+```bash
+# Terminal 1: Start API server
+python run_api.py
+
+# Terminal 2: Start frontend
+cd frontend
+npm run dev
+```
+
+Open http://localhost:5173 in your browser.
+
+### Option 2: Command Line
 
 Process all listings in sample feed:
 ```bash
@@ -101,15 +154,42 @@ Process single listing:
 python src/main.py --stock 156359BB
 ```
 
+### Option 3: Phase-Based Execution
+
+Run phases separately for more control:
+
+```bash
+# Phase 1: Download images and parse data
+python src/run_phase1.py
+
+# Phase 2: Generate scripts, voiceovers, and process images
+python src/run_phase2.py
+```
+
+### Option 4: REST API
+
+Start the API server:
+```bash
+python run_api.py
+```
+
+API endpoints:
+- `GET /api/listings` - Get all listings
+- `GET /api/listings/{stock}` - Get single listing
+- `POST /api/generate` - Generate assets for a listing
+- `GET /api/health` - Health check
+
 ### Pipeline Stages
 
-The system runs through 5 stages:
+The system runs through these stages:
 
 1. **Parse Feed**: Read CSV inventory data
 2. **Download Images**: Fetch all motorcycle photos
-3. **Save Metadata**: Store listing information
+3. **Process Images**: Remove backgrounds with AI
 4. **Generate Scripts**: Create AI-powered ad copy
-5. **Generate QR Codes**: Create reservation links
+5. **Generate Voiceovers**: Text-to-Speech conversion
+6. **Generate QR Codes**: Create reservation links
+7. **Upload to R2**: Store assets in cloud (optional)
 
 ### Example Output
 
@@ -117,13 +197,16 @@ After running the pipeline, you'll have:
 
 ```
 assets/
-  4802/                    # Dealer ID
-    156359BB/              # Stock Number
-      ├── metadata.json    # Listing data
-      ├── photo_00.jpg     # Original images
+  api/                    # API-generated assets
+    156359BB/             # Stock Number
+      ├── photo_00.jpg    # Original images
       ├── photo_01.jpg
-      ├── script.txt       # Generated script
-      └── qr_code.png      # QR code
+      ├── processed/      # Background-removed images
+      │   ├── photo_00_nobg.png
+      │   └── photo_01_nobg.png
+      ├── script.txt      # Generated script
+      ├── voiceover.mp3   # Generated voiceover
+      └── qr_code.png     # QR code
 ```
 
 ## Configuration
@@ -134,6 +217,13 @@ assets/
 # API Keys
 OPENAI_API_KEY=sk-...
 ANTHROPIC_API_KEY=sk-ant-...
+
+# Cloudflare R2
+R2_ACCOUNT_ID=your-account-id
+R2_ACCESS_KEY_ID=your-access-key
+R2_SECRET_ACCESS_KEY=your-secret-key
+R2_BUCKET_NAME=slasher-assets
+R2_PUBLIC_URL=https://your-r2-url.r2.dev
 
 # Directories
 OUTPUT_DIR=./output
@@ -168,9 +258,15 @@ CSV Feed → Parser → Listings
                       ↓
             Image Downloader → Assets
                       ↓
+            Image Processor → Background Removed
+                      ↓
             Script Generator → Scripts
                       ↓
+            Voice Generator → Voiceovers
+                      ↓
             QR Generator → QR Codes
+                      ↓
+            R2 Uploader → Cloud Storage
                       ↓
          Video Composer → 30s MP4
 ```
@@ -197,11 +293,14 @@ CSV Feed → Parser → Listings
 - [x] QR code generator
 - [x] Configuration system
 - [x] Main pipeline
+- [x] Image processor (background removal with rembg)
+- [x] Voice generator (Text-to-Speech with gTTS)
+- [x] REST API (FastAPI)
+- [x] Web dashboard (React + TypeScript)
+- [x] Cloudflare R2 integration
 
 ### 🚧 In Progress
 
-- [ ] Image processor (background removal, enhancement)
-- [ ] Voice generator (Text-to-Speech)
 - [ ] Video composition engine (MoviePy)
 - [ ] Template renderer
 - [ ] Animation system
@@ -209,7 +308,6 @@ CSV Feed → Parser → Listings
 
 ### 📋 Planned
 
-- [ ] Web dashboard for monitoring
 - [ ] Real-time feed ingestion
 - [ ] A/B testing for templates
 - [ ] Analytics and reporting
@@ -237,9 +335,21 @@ Example listing:
 ### AI/ML
 - **OpenAI GPT-4**: Script generation
 - **Anthropic Claude**: Alternative script generation
-- **rembg**: Background removal (planned)
+- **rembg**: Background removal
+- **gTTS**: Text-to-Speech
 
-### Video (Planned)
+### API & Frontend
+- **FastAPI**: REST API framework
+- **Uvicorn**: ASGI server
+- **React**: Frontend framework
+- **TypeScript**: Type-safe JavaScript
+- **Vite**: Frontend build tool
+
+### Cloud & Storage
+- **Cloudflare R2**: Object storage
+- **boto3**: AWS/R2 SDK
+
+### Video (In Progress)
 - **MoviePy**: Video composition
 - **OpenCV**: Image processing
 - **Pillow**: Image manipulation
@@ -254,7 +364,9 @@ Example listing:
 
 - **CSV Parsing**: ~1000 listings/second
 - **Image Download**: 5 concurrent downloads (configurable)
+- **Background Removal**: ~2-5 seconds per image
 - **Script Generation**: ~5-10 seconds per listing
+- **Voice Generation**: ~2-3 seconds per script
 - **Video Rendering**: ~30-60 seconds per video (estimated)
 
 ## Examples
