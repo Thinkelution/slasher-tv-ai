@@ -3,6 +3,8 @@ import react from '@vitejs/plugin-react'
 
 export default defineConfig({
   plugins: [react()],
+  // Base path for production deployment at /slasher subdirectory
+  base: '/slasher/',
   server: {
     port: 3000,
     proxy: {
@@ -11,5 +13,8 @@ export default defineConfig({
         changeOrigin: true,
       }
     }
+  },
+  build: {
+    outDir: 'dist',
   }
 })

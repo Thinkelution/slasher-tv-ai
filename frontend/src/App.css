@@ -51,6 +51,24 @@
   letter-spacing: 1px;
 }
 
+/* Section Title */
+.section-title {
+  margin-bottom: 1.5rem;
+}
+
+.section-label {
+  display: inline-block;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.4rem;
+  letter-spacing: 3px;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  padding: 0.5rem 1rem;
+  background: linear-gradient(135deg, rgba(255, 59, 48, 0.1), rgba(255, 68, 68, 0.05));
+  border-left: 3px solid var(--accent);
+  border-radius: 0 8px 8px 0;
+}
+
 /* Tabs */
 .tabs {
   display: flex;

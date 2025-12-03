@@ -47,9 +47,7 @@ slasher/
 │   │   └── routes.py            # API endpoints
 │   ├── utils/                   # Utilities
 │   │   └── r2_uploader.py       # Cloudflare R2 integration
-│   ├── main.py                  # Main pipeline
-│   ├── run_phase1.py            # Phase 1: Data collection
-│   └── run_phase2.py            # Phase 2: AI processing
+│   └── main.py                  # CLI pipeline
 ├── frontend/                    # React Web Dashboard
 │   ├── src/
 │   │   ├── App.tsx              # Main application
@@ -154,19 +152,7 @@ Process single listing:
 python src/main.py --stock 156359BB
 ```
 
-### Option 3: Phase-Based Execution
-
-Run phases separately for more control:
-
-```bash
-# Phase 1: Download images and parse data
-python src/run_phase1.py
-
-# Phase 2: Generate scripts, voiceovers, and process images
-python src/run_phase2.py
-```
-
-### Option 4: REST API
+### Option 3: REST API
 
 Start the API server:
 ```bash

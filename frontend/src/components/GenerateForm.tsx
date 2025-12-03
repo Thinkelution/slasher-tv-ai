@@ -181,7 +181,9 @@ function GenerateForm({ showToast }: GenerateFormProps) {
       music_volume: formData.music_volume
     }
 
-    const response = await fetch('/api/generate', {
+    // Use relative URL - works with both dev proxy and production subdirectory
+    const apiBase = import.meta.env.PROD ? '/slasher/api' : '/api'
+    const response = await fetch(`${apiBase}/generate`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)

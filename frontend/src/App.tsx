@@ -33,6 +33,10 @@ function App() {
         </div>
       </header>
 
+      <div className="section-title">
+        <span className="section-label">Sample Record Ingest Demo</span>
+      </div>
+
       <div className="tabs">
         <button 
           className={`tab ${activeTab === 'generate' ? 'active' : ''}`}
