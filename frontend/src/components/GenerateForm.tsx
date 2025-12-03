@@ -251,7 +251,7 @@ function GenerateForm({ showToast }: GenerateFormProps) {
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
           </svg>
-          New Video Generation
+          Enter Details <span className="title-hint">(Represents 1 row of Sample CSV)</span>
         </h2>
       </div>
 
@@ -396,7 +396,7 @@ function GenerateForm({ showToast }: GenerateFormProps) {
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                 </svg>
-                Generate Video
+                Generate Assets
               </>
             )}
           </button>
