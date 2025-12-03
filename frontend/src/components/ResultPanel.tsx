@@ -1,3 +1,4 @@
+import { useRef, useEffect } from 'react'
 import { ToastType } from '../App'
 import './ResultPanel.css'
 
@@ -32,15 +33,63 @@ interface ResultPanelProps {
 }
 
 function ResultPanel({ stockNumber, assets, onRegenerate, isRegenerating, showToast }: ResultPanelProps) {
+  const audioRef = useRef<HTMLAudioElement>(null)
+
   const copyToClipboard = (text: string, label: string) => {
     navigator.clipboard.writeText(text)
     showToast(`${label} copied to clipboard!`, 'success')
   }
 
+  // Reset audio to beginning when it ends
+  const handleAudioEnded = () => {
+    if (audioRef.current) {
+      audioRef.current.currentTime = 0
+      audioRef.current.load() // Reload to ensure proper reset
+    }
+  }
+
+  // Handle regenerate with audio reset
+  const handleRegenerate = () => {
+    if (audioRef.current) {
+      audioRef.current.pause()
+      audioRef.current.currentTime = 0
+    }
+    onRegenerate()
+  }
+
+  // Reset audio when voiceover URL changes (after regeneration)
+  useEffect(() => {
+    if (audioRef.current && assets.r2_urls?.voiceover) {
+      audioRef.current.load()
+      audioRef.current.currentTime = 0
+    }
+  }, [assets.r2_urls?.voiceover?.url])
+
   return (
     <div className="result-panel">
       <div className="result-header">
-        <h3>🎉 Generation Complete!</h3>
+        <div className="result-title-row">
+          <h3>Assets Generated for Review.</h3>
+          <button 
+            className="btn btn-regenerate"
+            onClick={handleRegenerate}
+            disabled={isRegenerating}
+          >
+            {isRegenerating ? (
+              <>
+                <div className="spinner"></div>
+                Regenerating...
+              </>
+            ) : (
+              <>
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                Regenerate
+              </>
+            )}
+          </button>
+        </div>
         <span className="stock-badge">{stockNumber}</span>
       </div>
 
@@ -90,7 +139,13 @@ function ResultPanel({ stockNumber, assets, onRegenerate, isRegenerating, showTo
         <div className="result-section">
           <h4>🎙️ Voiceover</h4>
           <div className="audio-player-container">
-            <audio controls className="audio-player">
+            <audio 
+              key={assets.r2_urls.voiceover.url}
+              ref={audioRef}
+              controls 
+              className="audio-player"
+              onEnded={handleAudioEnded}
+            >
               <source src={assets.r2_urls.voiceover.url} type="audio/mpeg" />
               Your browser does not support the audio element.
             </audio>
@@ -137,26 +192,16 @@ function ResultPanel({ stockNumber, assets, onRegenerate, isRegenerating, showTo
         </div>
       )}
 
-      {/* Actions */}
+      {/* Confirm Assets Button */}
       <div className="result-actions">
         <button 
-          className="btn btn-regenerate"
-          onClick={onRegenerate}
-          disabled={isRegenerating}
+          className="btn btn-confirm-assets"
+          onClick={() => {}}
         >
-          {isRegenerating ? (
-            <>
-              <div className="spinner"></div>
-              Regenerating...
-            </>
-          ) : (
-            <>
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-              </svg>
-              Regenerate
-            </>
-          )}
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+          </svg>
+          Confirm Assets for Video Generation
         </button>
       </div>
 

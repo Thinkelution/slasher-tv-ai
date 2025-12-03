@@ -8,18 +8,60 @@
 
 .result-header {
   display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.result-title-row {
+  display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 1.5rem;
+  gap: 1rem;
 }
 
 .result-header h3 {
   font-size: 1.25rem;
   font-weight: 600;
-  color: var(--success);
+  color: var(--text-primary);
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  margin: 0;
+}
+
+.result-title-row .btn-regenerate {
+  padding: 0.6rem 1.25rem;
+  font-size: 0.875rem;
+}
+
+.btn-confirm-assets {
+  padding: 1rem 2rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: white;
+  box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+  width: 100%;
+}
+
+.btn-confirm-assets:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 25px rgba(16, 185, 129, 0.4);
+}
+
+.btn-confirm-assets:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
 }
 
 .stock-badge {

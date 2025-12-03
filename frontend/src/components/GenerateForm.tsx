@@ -84,6 +84,17 @@ const initialFormData: FormData = {
   music_volume: 30
 }
 
+// Processing steps for the overlay
+const PROCESSING_STEPS = [
+  { id: 'download', label: 'Downloading Images', icon: '📥' },
+  { id: 'background', label: 'Cleaning Background', icon: '🖼️' },
+  { id: 'script', label: 'Generating Script', icon: '📝' },
+  { id: 'voiceover', label: 'Generating Voiceover', icon: '🎙️' },
+  { id: 'qr', label: 'Creating QR Code', icon: '📱' },
+  { id: 'upload', label: 'Uploading to Cloud', icon: '☁️' },
+  { id: 'complete', label: 'Finalizing Assets', icon: '✨' }
+]
+
 function GenerateForm({ showToast }: GenerateFormProps) {
   const [formData, setFormData] = useState<FormData>(initialFormData)
   const [isLoading, setIsLoading] = useState(false)
@@ -93,6 +104,8 @@ function GenerateForm({ showToast }: GenerateFormProps) {
   const [isMusicLoading, setIsMusicLoading] = useState(true)
   const [previewAudio, setPreviewAudio] = useState<HTMLAudioElement | null>(null)
   const [isPlaying, setIsPlaying] = useState(false)
+  const [currentStep, setCurrentStep] = useState(0)
+  const [showOverlay, setShowOverlay] = useState(false)
 
   // Fetch music tracks from Jamendo API
   useEffect(() => {
@@ -202,9 +215,27 @@ function GenerateForm({ showToast }: GenerateFormProps) {
     e.preventDefault()
     setIsLoading(true)
     setResult(null)
+    setShowOverlay(true)
+    setCurrentStep(0)
+
+    // Simulate step progression while API processes
+    const stepInterval = setInterval(() => {
+      setCurrentStep(prev => {
+        if (prev < PROCESSING_STEPS.length - 1) {
+          return prev + 1
+        }
+        return prev
+      })
+    }, 2500) // Change step every 2.5 seconds
 
     try {
       const data = await generateVideo()
+      
+      // Complete all steps
+      setCurrentStep(PROCESSING_STEPS.length - 1)
+      
+      // Small delay to show completion
+      await new Promise(resolve => setTimeout(resolve, 500))
       
       // Backend returns { success, stock_number, listing_dir, assets, message }
       setResult({
@@ -216,15 +247,33 @@ function GenerateForm({ showToast }: GenerateFormProps) {
     } catch (error) {
       showToast(error instanceof Error ? error.message : 'Generation failed', 'error')
     } finally {
+      clearInterval(stepInterval)
       setIsLoading(false)
+      setShowOverlay(false)
     }
   }
 
   const handleRegenerate = async () => {
     setIsRegenerating(true)
+    setShowOverlay(true)
+    setCurrentStep(0)
+
+    // Simulate step progression while API processes
+    const stepInterval = setInterval(() => {
+      setCurrentStep(prev => {
+        if (prev < PROCESSING_STEPS.length - 1) {
+          return prev + 1
+        }
+        return prev
+      })
+    }, 2500)
 
     try {
       const data = await generateVideo()
+      
+      // Complete all steps
+      setCurrentStep(PROCESSING_STEPS.length - 1)
+      await new Promise(resolve => setTimeout(resolve, 500))
       
       setResult({
         stockNumber: data.stock_number,
@@ -235,7 +284,9 @@ function GenerateForm({ showToast }: GenerateFormProps) {
     } catch (error) {
       showToast(error instanceof Error ? error.message : 'Regeneration failed', 'error')
     } finally {
+      clearInterval(stepInterval)
       setIsRegenerating(false)
+      setShowOverlay(false)
     }
   }
 
@@ -246,6 +297,30 @@ function GenerateForm({ showToast }: GenerateFormProps) {
 
   return (
     <div className="card">
+      {/* Processing Overlay */}
+      {showOverlay && (
+        <div className="processing-overlay">
+          <div className="processing-modal">
+            <div className="processing-spinner"></div>
+            <h3 className="processing-title">Generating Assets</h3>
+            <div className="processing-steps">
+              {PROCESSING_STEPS.map((step, index) => (
+                <div 
+                  key={step.id} 
+                  className={`processing-step ${index < currentStep ? 'completed' : ''} ${index === currentStep ? 'active' : ''}`}
+                >
+                  <span className="step-icon">{step.icon}</span>
+                  <span className="step-label">{step.label}</span>
+                  {index < currentStep && <span className="step-check">✓</span>}
+                  {index === currentStep && <span className="step-dots">...</span>}
+                </div>
+              ))}
+            </div>
+            <p className="processing-hint">Please wait while we process your request</p>
+          </div>
+        </div>
+      )}
+
       <div className="card-header">
         <h2 className="card-title">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
