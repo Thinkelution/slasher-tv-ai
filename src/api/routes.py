@@ -120,6 +120,16 @@ async def generate_video(request: GenerateRequest):
                 logger.warning(f"Image processing failed: {e}")
         
         # Step 3: Generate AI Script
+        # Delete old script and voiceover to ensure fresh generation
+        old_script = listing_dir / "script.txt"
+        old_voiceover = listing_dir / "voiceover.mp3"
+        if old_script.exists():
+            old_script.unlink()
+            logger.info("Deleted old script.txt")
+        if old_voiceover.exists():
+            old_voiceover.unlink()
+            logger.info("Deleted old voiceover.mp3")
+        
         logger.info("Generating AI script...")
         try:
             script_gen = ScriptGenerator(provider="openai")

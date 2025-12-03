@@ -9,6 +9,7 @@ develop-eggs/
 dist/
 downloads/
 deploy/
+deploy_package/
 eggs/
 .eggs/
 lib/

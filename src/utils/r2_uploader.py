@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import Optional, Dict
 import logging
 import mimetypes
+import time
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -80,20 +81,22 @@ class R2Uploader:
             content_type = content_type or "application/octet-stream"
         
         try:
-            # Upload file
+            # Upload file with cache-control headers to prevent caching
             with open(file_path, "rb") as f:
                 self.client.put_object(
                     Bucket=self.bucket_name,
                     Key=key,
                     Body=f,
-                    ContentType=content_type
+                    ContentType=content_type,
+                    CacheControl="no-cache, no-store, must-revalidate"
                 )
             
-            # Build public URL
+            # Build public URL with cache-busting timestamp
+            timestamp = int(time.time())
             if self.public_url:
-                url = f"{self.public_url.rstrip('/')}/{key}"
+                url = f"{self.public_url.rstrip('/')}/{key}?v={timestamp}"
             else:
-                url = f"https://{self.bucket_name}.r2.dev/{key}"
+                url = f"https://{self.bucket_name}.r2.dev/{key}?v={timestamp}"
             
             logger.info(f"✓ Uploaded: {key}")
             
