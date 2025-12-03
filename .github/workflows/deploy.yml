@@ -1,0 +1,146 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+      - feature/ui
+  workflow_dispatch:  # Manual trigger
+
+env:
+  SERVER_PATH: /var/www/slasher-tv-ai
+  NODE_VERSION: '18'
+  PYTHON_VERSION: '3.11'
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      # 1. Checkout code
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+
+      # 2. Setup Node.js
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      # 3. Install frontend dependencies
+      - name: 📦 Install Frontend Dependencies
+        working-directory: frontend
+        run: npm ci
+
+      # 4. Build frontend
+      - name: 🔨 Build Frontend
+        working-directory: frontend
+        run: npm run build
+
+      # 5. Prepare deployment package
+      - name: 📦 Prepare Deployment Package
+        run: |
+          mkdir -p deploy_package/frontend
+          
+          # Copy backend source
+          cp -r src deploy_package/
+          cp requirements.txt deploy_package/
+          cp run_api.py deploy_package/
+          cp sample-feed.csv deploy_package/
+          
+          # Copy frontend build (not source)
+          cp -r frontend/dist deploy_package/frontend/
+          
+          # Remove unnecessary files
+          find deploy_package -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
+          find deploy_package -type f -name "*.pyc" -delete 2>/dev/null || true
+          
+          echo "📦 Deployment package contents:"
+          ls -la deploy_package/
+          echo ""
+          echo "📦 Frontend dist:"
+          ls -la deploy_package/frontend/dist/
+
+      # 6. Setup SSH
+      - name: 🔑 Setup SSH Key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts
+
+      # 7. Deploy to server
+      - name: 🚀 Deploy to Server
+        run: |
+          # Upload deployment package
+          rsync -avz --delete \
+            -e "ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no" \
+            deploy_package/ \
+            ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:${{ env.SERVER_PATH }}/
+          
+          # Setup and restart on server
+          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no \
+            ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} << 'EOF'
+            
+            cd /var/www/slasher-tv-ai
+            
+            # Restore .env if backup exists
+            if [ -f ~/slasher_env_backup ]; then
+              cp ~/slasher_env_backup .env
+              echo "✓ .env restored from backup"
+            fi
+            
+            # Restore assets if backup exists
+            if [ -d ~/slasher_assets_backup ]; then
+              cp -r ~/slasher_assets_backup assets
+              echo "✓ assets restored from backup"
+            fi
+            
+            # Create venv if not exists
+            if [ ! -d venv ]; then
+              python3 -m venv venv
+              echo "✓ Virtual environment created"
+            fi
+            
+            # Install Python dependencies
+            source venv/bin/activate
+            pip install -r requirements.txt -q
+            echo "✓ Dependencies installed"
+            
+            # Restart service
+            sudo systemctl restart slasher-api
+            echo "✓ Service restarted"
+            
+            # Verify deployment
+            sleep 3
+            if systemctl is-active --quiet slasher-api; then
+              echo "✅ Deployment successful! Service is running."
+            else
+              echo "❌ Service failed to start"
+              systemctl status slasher-api --no-pager
+              exit 1
+            fi
+          EOF
+
+      # 8. Verify deployment
+      - name: ✅ Verify Deployment
+        run: |
+          sleep 5
+          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://dev.thinkelution.com/slasher/)
+          if [ "$HTTP_STATUS" = "200" ]; then
+            echo "✅ Website is live! HTTP Status: $HTTP_STATUS"
+            echo "🌐 URL: https://dev.thinkelution.com/slasher/"
+          else
+            echo "⚠️ Website returned HTTP Status: $HTTP_STATUS"
+          fi
+
+      # 9. Cleanup
+      - name: 🧹 Cleanup
+        if: always()
+        run: |
+          rm -f ~/.ssh/deploy_key
+          rm -rf deploy_package
+

@@ -21,7 +21,7 @@ ELEVENLABS_API_URL = "https://api.elevenlabs.io/v1"
 # Recommended voices for TV commercial (bold male voices)
 VOICE_PRESETS = {
     # Deep, authoritative male voices ideal for TV commercials
-    "dan": "CwhRBWXzGAHq8TQ4Fs17",       # Dan - Enthusiastic, natural salesman voice (BEST)
+    "dan": "BljExKL9QymFAat1iN6Y",       # Dan - Jerry's ElevenLabs (Primary voice)
     "adam": "pNInz6obpgDQGcFmaJgB",      # Deep, narrative voice
     "arnold": "VR6AewLTigWG4xSOukaG",    # Strong, bold voice  
     "josh": "TxGEqnHWrfWFTfGW9XjX",      # Deep, dramatic voice
